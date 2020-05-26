@@ -40,7 +40,7 @@ async function trainModel(model, inputs, labels) {
     metrics: ['acc'],
   });
   const batchSize = 10;
-  const epochs = 14;
+  const epochs = 140;
   const oneHot = tf.oneHot(labels, 3);
   console.log("Train input:"); inputs.print();
   console.log("Labels oneHot:"); oneHot.print(); // debug
