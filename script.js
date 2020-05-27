@@ -3,18 +3,19 @@ async function getHealthData() {
   const healthData = await healthDataReq.json();
   const cleanedHealthData = healthData.map(d => ({
     featureA: d.A,
-    featureB: d.B,
+    featureB: d.A/d.B,
     label: d.Class
   })).filter(d => (d.featureA != null && d.featureB != null && d.label != null));
   return cleanedHealthData;
 }
 
 async function getTestData() {
-  const testDataReq = await fetch('testData.json');
+  const testDataReq = await fetch('testData1.json');
   const testData = await testDataReq.json();
   const cleanedTestData = testData.map(d => ({
     featureA: d.A,
-    featureB: d.B
+    featureB: d.A/d.B,
+    expectedClass: d.ExpClass
   })).filter(d => (d.featureA != null && d.featureB != null));
   return cleanedTestData;
 }
@@ -23,7 +24,7 @@ function createModel() {
   // Create a sequential model
   const model = tf.sequential();
   // Add an input layer
-  model.add(tf.layers.dense({ inputShape: [2], units: 1, useBias: true }));
+  model.add(tf.layers.dense({ inputShape: [2], units: 1 }));
   model.add(tf.layers.dense({ units: 15, activation: 'relu' }));
   model.add(tf.layers.dense({ units: 10, activation: 'relu' }));
 
@@ -35,12 +36,12 @@ function createModel() {
 async function trainModel(model, inputs, labels) {
   // Prepare the model for training.
   model.compile({
-    optimizer: tf.train.adam(),
+    optimizer: tf.train.adam(0.05),
     loss: tf.losses.softmaxCrossEntropy,
     metrics: ['accuracy']
   });
-  const batchSize = 5;
-  const epochs = 200;
+  const batchSize = 10;
+  const epochs = 80;
   const oneHot = tf.oneHot(labels, 3);
   console.log("Train input:"); inputs.print();
   console.log("Labels oneHot:"); oneHot.print(); // debug
@@ -58,6 +59,7 @@ async function trainModel(model, inputs, labels) {
 
 function testModel(model, inputData, min, max) {
   const { inputs, labels } = inputData;
+  
   const unNormInput = inputs
     .mul(max.sub(min))
     .add(min);
@@ -69,7 +71,7 @@ function testModel(model, inputData, min, max) {
   const decodedPredArray = decodedPred.arraySync();
 
   // show output data table
-  const headers = ['Feature A', 'Feature B', 'Pred-Class'];
+  const headers = ['Feature A', 'Feature B', 'PredClass'];
   const values = unNormInput.arraySync().map((e, i) => e.concat(decodedPredArray[i]));
   const surface = { name: 'Output health data table', tab: 'Data analisys' };
   tfvis.render.table(surface, { headers, values });
