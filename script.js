@@ -33,14 +33,14 @@ function createModel() {
 }
 
 async function trainModel(model, inputs, labels) {
-  // Prepare the model for training.  
+  // Prepare the model for training.
   model.compile({
     optimizer: tf.train.adam(),
-    loss: tf.losses.meanSquaredError, //categorical_crossentropy? how?
-    metrics: ['acc'],
+    loss: tf.losses.softmaxCrossEntropy,
+    metrics: ['accuracy']
   });
-  const batchSize = 10;
-  const epochs = 140;
+  const batchSize = 5;
+  const epochs = 200;
   const oneHot = tf.oneHot(labels, 3);
   console.log("Train input:"); inputs.print();
   console.log("Labels oneHot:"); oneHot.print(); // debug
